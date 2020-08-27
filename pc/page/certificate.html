@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <link rel="stylesheet" href="../css/normalize.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/user.css">
+</head>
+<body>
+<div id="vue" v-cloak>
+    <header-comp></header-comp>
+    <div class="main clearfix">
+        <nav-comp></nav-comp>
+        <div class="content">
+            <div class="credentials-block" v-for="item in list">
+                <div class="header">编号：{{item.serialNumber}}</div>
+                <i class="line-h"></i>
+                <div class="credentials-title">证件名称：{{item.certificatesName}}</div>
+                <div class="credentials-title">下次复审时间：{{item.nextReviewDate}}</div>
+                <div class="credentials-title">证件到期时间：{{item.certificatesExpireDate}}</div>
+                <div class="credentials-title">状态：{{item.state == 2 ? '未通过': '已发证'}}</div>
+                <div class="credentials-title">科目：</div>
+                <div class="credentials-title subject" v-for="subItem in item.gradeInfoList">{{subItem.subjectName}}</div>
+                <div class="credentials-title">备注：{{item.remake}}</div>
+
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script src="../js/jquery-3.1.0.min.js"></script>
+<script src="../js/js.cookie.js"></script>
+<script src="../js/vue.js"></script>
+<script src="../js/base.js"></script>
+<script>
+    new Vue ({
+        el: '#vue',
+        data: {
+            list: ''
+        },
+        filters: {
+
+        },
+        components: {
+            headerComp: headerComp,
+            navComp: navComp
+        },
+        mounted: function () {
+            this.getCertificatesInfoList();
+        },
+        methods: {
+            getCertificatesInfoList: function () {
+                var This = this;
+                base.aJax({
+                    url: 'wap/student/getCertificatesInfoList',
+                    data: base.loginInfo,
+                    success: function (code) {
+                        if(code.status == 300){
+                            This.list = code.data;
+                        } else {
+                            base.error(code);
+                        }
+                    },
+                    error: function (code) {
+                        base.error(code);
+                    }
+                })
+            }
+        }
+    });
+</script>
+</html>

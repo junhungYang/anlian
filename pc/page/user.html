@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"> 
+    <title></title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <link rel="stylesheet" href="../css/normalize.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/user.css">
+</head>
+<body>
+    <div id="vue" v-cloak>
+        <header-comp></header-comp>
+        <div class="main clearfix">
+            <nav-comp></nav-comp>
+            <div class="content">
+                <div class="user-block clearfix">
+                    <img src="../img/user-block.png">
+                    <div class="user-title">
+                        <i class="line-h"></i>
+                        <div>姓名：{{userTitle.studentName}}</div>
+                        <!--<div>学员编号：{{userTitle.studentNumber}}</div>-->
+                        <div>性别：{{userTitle.sex}}</div>
+                        <div>年龄：{{userTitle.age}}</div>
+                        <!--<div>科目：{{userTitle.subjectName}}</div>-->
+                        <div>身份证号：{{userTitle.idCard}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script src="../js/jquery-3.1.0.min.js"></script>
+<script src="../js/js.cookie.js"></script>
+<script src="../js/vue.js"></script>
+<script src="../js/base.js"></script>
+<script>
+    new Vue ({
+        el: '#vue',
+        data: {
+            userTitle: ''
+        },
+        components: {
+//            'left': leftCode
+            headerComp: headerComp,
+            navComp: navComp
+        },
+        created: function () {
+            this.getStudentInfo();
+        },
+        methods: {
+            getStudentInfo: function () {
+                var This = this;
+                base.aJax({
+                    url: 'wap/student/getStudentInfo',
+                    data: base.loginInfo,
+                    success: function (code) {
+                        This.userTitle = code.data;
+                        Cookies.set('loginFrequency', code.data.loginFrequency);
+                        var student = {
+                            name: code.data.studentName,
+                            idCard: code.data.idCard,
+                            sex: code.data.sex
+                        }
+                        Cookies.set('studentInfo', student);
+                    }
+                })
+            }
+        }
+    });
+</script>
+</html>

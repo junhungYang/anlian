@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <link rel="stylesheet" href="../css/normalize.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/test.css">
+</head>
+<body>
+<div id="vue" v-cloak>
+    <header-comp></header-comp>
+    <div class="main clearfix">
+        <nav-comp @subject-change="subjectChange"></nav-comp>
+        <div class="content" v-if="question.sort">
+            <div class="test-block">
+                <div class="head-line">
+                    总题数： {{sumQuestionNumber}}
+                </div>
+                <div class="test-question">
+                    <div class="question-type">{{question.optionType | testType}}</div>
+                    <div class="question-block">
+                        <div class="question">
+                            <span>{{question.sort}}. {{question.questionContent}}</span>
+                            <img v-if="question.questionImageUrl" :src="question.questionImageUrl">
+                        </div>
+                        <template v-for="option in question.optionInfoList">
+                            <label class="option">
+                                <input type="checkbox" v-if="question.optionType == 2" v-model="studentAnswer" :value="option.optionLetter" :disabled="question.isSubmit">
+                                <input type="radio" v-else v-model="studentAnswer" :value="option.optionLetter" :disabled="question.isSubmit">
+                                <span>{{option.optionLetter}}. {{option.optionContent}}</span>
+                                <img v-if="option.optionImageUrl" :src="option.optionImageUrl">
+                            </label>
+                        </template>
+                        <div class="answer-container">
+                            <div class="answer true" v-if="question.isTrue === true">
+                                正确！
+                            </div>
+                            <div class="answer" v-if="question.isTrue === false">
+                                正确答案：{{question.trueAnswer}}
+                            </div>
+                        </div>
+                        <div class="test-ctrl">
+                            <div class="ctrl-btn" @click="submitPractice()" v-if="!question.isSubmit">确定</div>
+                            <div class="ctrl-btn" :class="{disabled: question.sort == sumQuestionNumber}" @click="getPracticeTest(question.sort + 1)" v-else>下一题</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script src="../js/jquery-3.1.0.min.js"></script>
+<script src="../js/js.cookie.js"></script>
+<script src="../js/vue.js"></script>
+<script src="../js/base.js"></script>
+<script>
+    new Vue ({
+        el: '#vue',
+        data: {
+            subjectId: '',
+            sumQuestionNumber: '',
+            answerNumber: 0,
+            studentAnswer: [],
+            // 联系类型 1=顺序、2=随机、3=错题
+            exercisesType: base.getUrl('type') || 1,
+            question: {}
+        },
+        filters: {
+            testType: function (value) {
+                if(value == '1'){
+                    return '单选'
+                }
+                else if(value == '2'){
+                    return '多选'
+                }
+                else if(value == '3'){
+                    return '判断'
+                }
+            }
+        },
+        components: {
+            headerComp: headerComp,
+            navComp: navComp
+        },
+        methods: {
+            subjectChange: function (val) {
+                this.subjectId = val;
+                this.question = {};
+                this.getPracticeTest();
+            },
+            getPracticeTest: function (sort) {
+                sort = sort || '';
+                if (!isNaN(sort) && sort > this.sumQuestionNumber) {
+                    return;
+                }
+                if (sort === '' && this.exercisesType != 1) {
+                    sort = 1;
+                }
+
+                var This = this;
+                base.aJax({
+                    url: 'wap/exercises/getQuestionInfo',
+                    data: {
+                        token: base.loginInfo.token,
+                        studentId: base.loginInfo.studentId,
+                        subjectId: This.subjectId,
+                        exercisesType: This.exercisesType,
+                        sort: sort,
+                        state: 2
+                    },
+                    success: function(code){
+                        if (code.status == 300) {
+                            This.answerNumber = code.data.answerNumber;
+                            This.question = code.data.questionInfo;
+                            This.sumQuestionNumber = code.data.sumQuestionNumber;
+                            if (This.question.studentAnswer) {
+                                if (This.question.optionType == 2) {
+                                    This.studentAnswer = This.question.studentAnswer.split('');
+                                } else {
+                                    This.studentAnswer = This.question.studentAnswer;
+                                }
+                            } else {
+                                This.studentAnswer = [];
+                            }
+                        } else {
+                            base.error(code);
+                        }
+                    },
+                    error: function (code) {
+                        base.error(code);
+                    }
+                });
+            },
+            submitPractice:function(){
+                var This = this;
+                if(!this.studentAnswer.length){
+                    alert('请先选择答案');
+                    return;
+                }
+                var answer = this.studentAnswer.join ? this.studentAnswer.slice().sort().join('') : this.studentAnswer;
+                base.aJax({
+                    url: 'wap/exercises/recordAnswer',
+                    data: {
+                        token: base.loginInfo.token,
+                        studentId: base.loginInfo.studentId,
+                        exercisesType: this.exercisesType,
+                        questionId: this.question.questionId,
+                        studentAnswer: answer
+                    },
+                    success: function(code){
+                        if(code.status == 300){
+                            This.question.trueAnswer = code.data.trueAnswer;
+                            This.question.isSubmit = true;
+                            Vue.set(This.question, 'isTrue', code.data.isTrue)
+                        } else {
+                            base.error(code);
+                        }
+                    }
+                })
+            }
+        }
+    });
+</script>
+</html>

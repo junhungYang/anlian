@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <link rel="stylesheet" href="../css/normalize.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/test.css">
+</head>
+<body>
+<div id="vue" v-cloak>
+    <header-comp></header-comp>
+    <div class="main clearfix">
+        <nav-comp></nav-comp>
+        <div class="content" v-if="question.sort">
+            <div class="testTop">
+                <div>考试科目: {{testSubject.subjectName}}</div>
+                <div>姓名: {{studentInfo.name}}</div>
+                <div>性别: {{studentInfo.sex}}</div>
+                <div>证件号: {{studentInfo.idCard}}</div>
+            </div>
+            <div class="test-block">
+                <div class="explain" v-if="testState != '3'">
+                    <span>{{answerNumber}}/{{sumQuestionNumber}}</span>
+                    <span>剩余时间：{{timeMinutes}}</span>
+                    <span class="submit-btn" @click="endTest()">交卷</span>
+                </div>
+                <div class="test-question">
+                    <div class="question-type">{{question.optionType | testType}}</div>
+                    <div class="question-block">
+                        <div class="question">
+                            <span>{{sort}}. {{question.questionContent}}</span>
+                            <img v-if="question.questionImageUrl" :src="question.questionImageUrl">
+                        </div>
+                        <template v-for="option in question.optionInfoList">
+                            <label class="option">
+                                <input type="checkbox" v-if="question.optionType == 2" v-model="studentAnswer" :value="option.optionLetter" :disabled="testState == 3">
+                                <input type="radio" v-else v-model="studentAnswer" :value="option.optionLetter" :disabled="testState == 3">
+                                <span>{{option.optionLetter}}. {{option.optionContent}}</span>
+                                <img v-if="option.optionImageUrl" :src="option.optionImageUrl">
+                            </label>
+                        </template>
+                        <div class="answer-container">
+                            <div class="answer true" v-if="question.isTrue === true">
+                                正确！
+                            </div>
+                            <div class="answer" v-if="question.isTrue === false">
+                                正确答案：{{question.trueAnswer}}
+                            </div>
+                        </div>
+                        <div class="test-ctrl">
+                            <div class="ctrl-btn" :class="{disabled: sort == 1}" @click="turn(sort - 1)" >上一题</div>
+                            <div class="ctrl-btn" :class="{disabled: sort == sumQuestionNumber}" @click="turn(sort + 1)" >下一题</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="question-number clearfix">
+                    <span v-for="item in quesStateList"  :class="[item.classStr, sort == item.sort ? 'on' : '']"  @click="turn(item.sort)">{{item.sort}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script src="../js/jquery-3.1.0.min.js"></script>
+<script src="../js/js.cookie.js"></script>
+<script src="../js/vue.js"></script>
+<script src="../js/base.js"></script>
+<script>
+    new Vue ({
+        el: '#vue',
+        data: {
+            studentInfo: Cookies.getJSON('studentInfo'),
+            testSubject: Cookies.getJSON('testSubject'),
+            // 试卷id
+            examId: base.getUrl('examId'),
+            remainExamSecond: '',
+            answerNumber: '',
+            sumQuestionNumber: '',
+            testState: '',
+            // 序号
+            timeSec: '',
+            timeMinutes: '',
+            questionList: null,
+            quesStateList: [],
+            sort: 0,
+            question: {},
+            studentAnswer: []
+        },
+        filters: {
+            testType: function (value) {
+                if(value == '1'){
+                    return '单选'
+                }
+                else if(value == '2'){
+                    return '多选'
+                }
+                else if(value == '3'){
+                    return '判断'
+                }
+            }
+        },
+        components: {
+            headerComp: headerComp,
+            navComp: navComp
+        },
+        watch: {
+            sort: function (val) {
+                val && this.setStudentAnswer();
+                this.question.sort &&　this.updateQuesState(this.question.sort);
+                this.question = this.questionList[val - 1];
+                this.studentAnswer = this.studentAnswer = this.question.studentAnswer
+                    ? this.question.optionType === 2 ? this.question.studentAnswer.split('') : this.question.studentAnswer
+                    : [];
+            },
+            studentAnswer: function (val) {
+                this.setStudentAnswer()
+            }
+        },
+        created: function () {
+            this.getQuestionList();
+            this.subjectId = Cookies.get('subjectChecked');
+        },
+        methods: {
+            updateQuesState: function (sort) {
+                var index, classStr, question, quesState;
+                index = !sort ? this.question.sort - this.quesStateList[0].sort: sort - this.quesStateList[0].sort;
+                question = !sort ? this.question : this.questionList[index];
+                if (question.trueAnswer) {
+                    quesState = question.trueAnswer == question.studentAnswer ? 2 : 3;
+                } else {
+                    quesState = question.studentAnswer ? 4 : 1;
+                }
+                switch (quesState) {
+                    case 1:
+                        classStr = '';
+                        break;
+                    case 4:
+                        classStr = 'done';
+                        break;
+                    case 2:
+                        classStr = 'right';
+                        break;
+                    case 3:
+                        classStr = 'wrong';
+                        break;
+                }
+                Vue.set(this.quesStateList[index], 'state', quesState);
+                Vue.set(this.quesStateList[index], 'classStr', classStr);
+            },
+            setStudentAnswer: function () {
+                var answer = this.studentAnswer.join ? this.studentAnswer.slice().sort().join('') : this.studentAnswer;
+                if (!this.question.studentAnswer && answer) {
+                    this.answerNumber++;
+                }
+                if (this.question.studentAnswer && !answer) {
+                    this.answerNumber--;
+                }
+                this.question.studentAnswer = answer;
+            },
+            getQuestionList: function () {
+                var This = this;
+                base.aJax({
+                    url: 'wap/exam/getExamQuestionInfo',
+                    data: {
+                        token: base.loginInfo.token,
+                        studentId: base.loginInfo.studentId,
+                        examId: this.examId
+                    },
+                    success: function(code){
+                        if(code.status == 300){
+                            This.testInit(code.data)
+                        } else {
+                            base.error(code);
+                        }
+                    }
+                });
+            },
+            testInit: function (testInfo) {
+                this.questionList = testInfo.questionInfoList;
+                this.sumQuestionNumber = this.questionList.length;
+                this.answerNumber = testInfo.answerNumber;
+                this.remainExamSecond = testInfo.remainExamSecond;
+                this.timeSec = testInfo.remainExamSecond;
+                this.testState = testInfo.state;
+                this.refreshSmsT();
+                this.sort = 1;
+                this.quesStateList = new Array(this.sumQuestionNumber);
+                var This = this;
+                this.questionList.forEach(function (item, index) {
+                    This.quesStateList[index] = {
+                        sort: item.sort,
+                        state: 1,
+                        classStr: ''
+                    }
+                });
+                this.quesStateList.forEach(function (item) {
+                    This.updateQuesState(item.sort);
+                });
+            },
+            turn: function (sort) {
+                if (sort < 1) {
+                    return;
+                } else if (sort > this.sumQuestionNumber) {
+                    return;
+                }
+                var This = this;
+                this.submitAnswer(function () {
+                    This.sort = sort;
+                })
+            },
+            refreshSmsT: function () {
+                var minutes,seconds,This = this;
+                if (this.timeSec == 0) {
+                    This.endTest(true);
+                } else {
+                    minutes = Math.floor(This.timeSec/60);
+                    seconds = (This.timeSec%60);
+                    if(seconds < 10){
+                        seconds = '0'+seconds;
+                    }
+                    This.timeMinutes = minutes +':'+ seconds;
+                    This.timeSec--;
+                    setTimeout(function () {
+                        This.refreshSmsT()
+                    }, 1000);
+                }
+            },
+            submitAnswer: function (cb) {
+                var This = this;
+                var answer = this.studentAnswer.join ? this.studentAnswer.slice().sort().join('') : this.studentAnswer;
+                base.aJax({
+                    url: 'wap/exam/submitQuestion',
+                    data: {
+                        token: base.loginInfo.token,
+                        studentId: base.loginInfo.studentId,
+                        examId: this.examId,
+                        remainExamSecond: This.timeSec,
+                        questionId: this.question.questionId,
+                        studentAnswer: answer,
+                        sort: this.sort
+                    },
+                    success: function(code){
+                        if(code.status == 300){
+                            cb && cb();
+                        } else {
+                            base.error(code);
+                        }
+                    },
+                    error: function () {
+                        base.error(code);
+                    }
+                });
+            },
+            //提交考试试卷
+            endTest: function (isTimeOut) {
+                var This = this;
+                this.submitAnswer(function () {
+                    if(isTimeOut || confirm("是否提交试卷结束考试")){
+                        base.aJax({
+                            url: 'wap/exam/submitExam',
+                            data: {
+                                token: base.loginInfo.token,
+                                studentId: base.loginInfo.studentId,
+                                subjectId: This.testSubject.subjectId,
+                                examId: This.examId
+                            },
+                            success: function(code){
+                                if(code.status == 300){
+                                    if (isTimeOut) {
+                                        alert('考试时间结束，自动交卷');
+                                    }
+                                    location.href = 'testCtrl.html'
+                                } else {
+                                    base.error(code);
+                                }
+                            },
+                            error: function () {
+                                base.error(code);
+                            }
+                        });
+                    }
+                })
+            }
+        }
+    });
+</script>
+</html>

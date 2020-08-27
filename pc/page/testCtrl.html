@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <link rel="stylesheet" href="../css/normalize.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/test.css">
+</head>
+<body>
+<div id="vue" class="testCtrlPage" v-cloak>
+    <header-comp></header-comp>
+    <div class="main clearfix">
+        <nav-comp ref="subjectSlt" @subject-change="subjectChange"></nav-comp>
+        <div class="content">
+            <div class="test-user-block">
+                <div class="examInfo">
+                    <div class="title">
+                        <div class="item">考试科目</div>
+                        <div class="value">{{examInfo.examName}}</div>
+                    </div>
+                    <div class="title">
+                        <div class="item">考试规格</div>
+                        <div class="value">{{examInfo.examSpec}}</div>
+                    </div>
+                    <div class="title">
+                        <div class="item">剩余次数</div>
+                        <div class="value">{{examInfo.remainFrequency}}</div>
+                    </div>
+                    <div class="title">
+                        <div class="item">平均成绩</div>
+                        <div class="value">{{examInfo.avgScore}}</div>
+                    </div>
+                    <div class="title">
+                        <div class="item">注意事项</div>
+                        <div class="value">{{examInfo.mattersNeedAttention}}</div>
+                    </div>
+                </div>
+                <div id="testCtrl">
+                    <div class="btn-block" v-on:click="newTest()">创建试题</div>
+                    <div class="table">
+                        <div class="table-line">
+                            <span class="small">序号</span>
+                            <span class="big">耗时</span>
+                            <span class="big">正确率</span>
+                            <span class="small">成绩</span>
+                            <span class="small">操作</span>
+                        </div>
+                        <div class="table-line" v-for="item in examList">
+                            <span class="small">{{item.sort}}</span>
+                            <span class="big">{{item.sumExamMinute}}</span>
+                            <span class="big">{{item.correctRate}}</span>
+                            <span class="small">{{item.totalScore}}</span>
+                            <span class="small">
+                                <a :href="'../page/test.html?examId='+ item.examId">{{item.state == 1 ? '开始' : item.state == 2 ? '继续' : '回顾'}}</a>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script src="../js/jquery-3.1.0.min.js"></script>
+<script src="../js/js.cookie.js"></script>
+<script src="../js/vue.js"></script>
+<script src="../js/base.js"></script>
+<script>
+    new Vue ({
+        el: '#vue',
+        data: {
+            examList: '',
+            examInfo: '',
+            subjectId: ''
+        },
+        components: {
+            headerComp: headerComp,
+            navComp: navComp
+        },
+        methods: {
+            subjectChange: function (val) {
+                this.subjectId = val;
+                this.getExamInfo();
+                this.getExamList();
+                this.$refs.subjectSlt.signUpSubjectList.some(function (item) {
+                    if (item.subjectId == val) {
+                        Cookies.set('testSubject', item);
+                        return true;
+                    }
+                });
+            },
+            // 考生信息
+            getExamInfo: function () {
+                var This = this;
+                base.aJax({
+                    url: 'wap/exam/getExamInfo',
+                    data: {
+                        token: base.loginInfo.token,
+                        studentId: base.loginInfo.studentId,
+                        subjectId: this.subjectId
+                    },
+                    success: function (code) {
+                        if(code.status == 300){
+                            This.examInfo = code.data;
+                        } else {
+                            base.error(code);
+                        }
+                    }
+                })
+            },
+
+            // 试卷信息
+            getExamList: function () {
+                var This = this;
+                base.aJax({
+                    url: 'wap/exam/getExamList',
+                    data: {
+                        token: base.loginInfo.token,
+                        studentId: base.loginInfo.studentId,
+                        subjectId: this.subjectId
+                    },
+                    success: function (code) {
+                        if(code.status == 300){
+                            This.examList = code.data;
+                        } else {
+                            base.error(code);
+                        }
+                    }
+                })
+            },
+
+            //创建试卷
+            newTest: function () {
+                var This = this;
+                base.aJax({
+                    url: 'wap/exam/createExamPaper',
+                    data: {
+                        token: base.loginInfo.token,
+                        studentId: base.loginInfo.studentId,
+                        subjectId: this.subjectId
+                    },
+                    success: function (code) {
+                        if(code.status == 300){
+                            This.getExamList();
+                        } else {
+                            base.error(code);
+                        }
+                    }
+                })
+            }
+        }
+    });
+</script>
+</html>

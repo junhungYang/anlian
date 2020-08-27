@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <link rel="stylesheet" href="../css/normalize.css">
+    <link rel="stylesheet" href="../css/base.css">
+    <link rel="stylesheet" href="../css/user.css">
+</head>
+<body>
+<div id="vue" v-cloak>
+    <header-comp></header-comp>
+    <div class="main clearfix">
+        <nav-comp></nav-comp>
+        <div class="content">
+            <div class="change-block clearfix">
+                <img src="../img/change.png">
+                <div class="frm-brock">
+                    <input class="input" type="password" placeholder="请输入当前密码" v-model="oldPassword">
+                    <input class="input" type="password" placeholder="请输入新密码" v-model="newPassword">
+                    <input class="input" type="password" placeholder="请再次输入新密码" v-model="confirmPassword">
+                    <div class="btn" @click="modifyPassword()">
+                        确认修改
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script src="../js/jquery-3.1.0.min.js"></script>
+<script src="../js/js.cookie.js"></script>
+<script src="../js/vue.js"></script>
+<script src="../js/base.js"></script>
+<script>
+    new Vue ({
+        el: '#vue',
+        data: {
+            oldPassword: '',
+            newPassword: '',
+            confirmPassword: ''
+        },
+        components: {
+            headerComp: headerComp,
+            navComp: navComp
+        },
+        mounted: function () {
+
+        },
+        methods: {
+            modifyPassword: function () {
+                var This = this;
+                if(This.oldPassword == ''){
+                    alert('请输入当前密码')
+                }
+                else if(This.newPassword == ''){
+                    alert('请输入新密码')
+                }
+                else if(This.confirmPassword == ''){
+                    alert('请再次输入新密码')
+                } else {
+                    base.aJax({
+                        url: 'wap/student/modifyPassWord',
+                        data: {
+                            token: base.loginInfo.token,
+                            studentId: base.loginInfo.studentId,
+                            originalPwd: This.oldPassword,
+                            newPwd: This.newPassword,
+                            repetitionNewPwd: This.confirmPassword
+                        },
+                        success: function (code) {
+                            if(code.status == 300){
+                                location.href = 'login.html'
+                            } else {
+                                base.error(code);
+                            }
+                        },
+                        error: function (code) {
+                            base.error(code);
+                        }
+                    })
+                }
+            }
+        }
+    });
+</script>
+</html>

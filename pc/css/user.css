@@ -1,0 +1,94 @@
+
+.user-block {
+    border: 1px solid #c9c9c9;
+    width: 654px;
+    height: 200px;
+    padding-top: 30px;
+}
+.user-block img {
+    float: left;
+    margin: 20px;
+}
+.user-title {
+    width: 300px;
+    float: left;
+    margin-left: 20px;
+    line-height: 30px;
+}
+.line-h {
+    position: relative;
+    margin-bottom: 10px;
+    display: block;
+    border-bottom: 1px solid #c9c9c9;
+}
+.line-h:before {
+    display: block;
+    content: '';
+    width: 30%;
+    border-bottom: 2px solid #4b5eb2;
+    position: absolute;
+    margin-top: -1px;
+}
+
+.credentials-block {
+    margin-bottom: 20px;
+    padding: 10px 180px 0 30px;
+    background-image: url("../img/credentials.png");
+    background-repeat: no-repeat;
+    background-position: 88%;
+    background-size: contain;
+    width: 560px;
+    height: 340px;
+    border: 1px solid #c9c9c9;
+    box-sizing: border-box;
+}
+.header {
+    width: 80%;
+    line-height: 55px;
+    font-size: 20px;
+}
+.credentials-block .credentials-title {
+    line-height: 30px;
+}
+.credentials-title.subject {
+    line-height: 24px;
+    text-indent: 1em;
+}
+
+
+.change-block {
+    padding: 30px 0 30px 50px;
+    border: 1px solid #c9c9c9;
+    margin: 100px 130px;
+}
+.change-block img {
+    float: left;
+    width: 150px;
+    margin-top: 50px;
+}
+.frm-brock {
+    float: left;
+    width: 375px;
+}
+.input {
+    display: block;
+    width: 300px;
+    height: 40px;
+    margin: 0 auto 10px;
+    border: 1px solid #ccc;
+    box-shadow: 0 0;
+    outline:medium;
+    text-indent: 15px;
+    font-size: 18px;
+}
+.btn {
+    width: 300px;
+    height: 42px;
+    margin: 20px auto 0;
+    line-height: 42px;
+    font-size: 18px;
+    text-align: center;
+    color: #fff;
+    cursor: pointer;
+    background-color: #4b5eb2;
+}

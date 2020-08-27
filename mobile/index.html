@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width, user-scalable=no,initial-scale=1">
+    <meta name="format-detection" content="telephone=no,email=no">
+    <title>安联安全生产培训</title>
+    <link rel="stylesheet" href="./dist/build.css">
+</head>
+<body>
+<div id="app">
+    <router-view></router-view>
+    <toast-comp v-model="isShowToast" :text="toastText" @on-hide="showToast(-1)"></toast-comp>
+    <error-confirm></error-confirm>
+</div>
+</body>
+<script src="./dist/build.js"></script>
+<script type="text/javascript"
+        src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"
+></script>
+</html>

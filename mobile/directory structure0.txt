@@ -1,0 +1,33 @@
+卷 DATA 的文件夹 PATH 列表
+卷序列号为 0000004C C878:6A43
+D:.
+│  .babelrc
+│  .eslintrc.js
+│  .gitignore
+│  ddd.txt
+│  directory structure.txt
+│  index.html
+│  package.json
+│  README.md
+│  
+├─build
+│      webpack.base.conf.js
+│      webpack.dev.conf.js
+│      webpack.prod.conf.js
+│      
+├─config
+├─dist
+└─src
+    │  main.js
+    │  router.js
+    │  store.js
+    │  
+    ├─assets
+    │  └─img
+    ├─components
+    ├─css
+    │      base.css
+    │      normalize.css
+    │      
+    ├─layouts
+    └─pages

@@ -1,0 +1,7 @@
+/.idea
+test.*
+npm-debug.log
+node_modules/
+dist/
+npm-debug.log
+!test.vue
